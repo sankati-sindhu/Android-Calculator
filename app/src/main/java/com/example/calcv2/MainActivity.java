@@ -9,11 +9,12 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
-    //intializing the variables used as global
+    //initializing the variables used as global
 
     //ans is contains, what is to be displayed in the text field output
     String buffer = "0";
-    Button b1, b2, b3, b4, b5, b6, b7, b8, b9, b0, b00, dec, add, sub, mult, div, per, equ2, del, clear;
+    int[] bufferInx;
+    Button b1, b2, b3, b4, b5, b6, b7, b8, b9, b0, b00, dec, add, sub, mul, div, per, equ2, del, clear;
     TextView tv;
     boolean operator = false, decBef = false;
 
@@ -36,15 +37,15 @@ public class MainActivity extends AppCompatActivity {
         dec = findViewById(R.id.bdecimal);
         add = findViewById(R.id.bplus);
         sub = findViewById(R.id.bminus);
-        mult = findViewById(R.id.bmult);
+        mul = findViewById(R.id.bmult);
         div = findViewById(R.id.bdivide);
-        per = findViewById(R.id.percent);
+        per = findViewById(R.id.bpercentage);
         clear = findViewById(R.id.bclear);
         del = findViewById(R.id.bdel);
-        dec = findViewById(R.id.bdecimal);
+        equ2 = findViewById(R.id.bequalto);
         tv = findViewById(R.id.output);
 
-        //initalizing the listeners
+        //initializing the listeners
         b00.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -119,8 +120,8 @@ public class MainActivity extends AppCompatActivity {
         b9.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               update("9");
-               tv.setText(buffer);
+                update("9");
+                tv.setText(buffer);
             }
         });
         dec.setOnClickListener(new View.OnClickListener() {
@@ -144,6 +145,51 @@ public class MainActivity extends AppCompatActivity {
                 tv.setText(buffer);
             }
         });
+        mul.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                update("*");
+                tv.setText(buffer);
+            }
+        });
+        div.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                update("/");
+                tv.setText(buffer);
+            }
+        });
+        per.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                update("%");
+                tv.setText(buffer);
+            }
+        });
+
+        del.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                delete();
+                tv.setText(buffer);
+            }
+        });
+        clear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buffer = "0";
+                operator = false;
+                decBef = false;
+                tv.setText(buffer);
+            }
+        });
+        equ2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                update("=");
+                tv.setText(buffer);
+            }
+        });
 
     }
     //updates the ans
@@ -151,9 +197,11 @@ public class MainActivity extends AppCompatActivity {
 
         //checks if the current input is an operator
         boolean operatorCur = (newAdd.equals("+") || newAdd.equals("-") || newAdd.equals("/") || newAdd.equals("*") || newAdd.equals("%"));
-
+        if(newAdd.equals("=")){
+            buffer = ""+evaluate();
+        }
         //if the input is an operator
-        if(operatorCur){
+        else if(operatorCur){
 
             //we can now have decimal inputs
             decBef = false;
@@ -161,12 +209,9 @@ public class MainActivity extends AppCompatActivity {
             if(operator){
                 //substitutes the previous operator with the new operator
                 buffer = buffer.substring(0,buffer.length()-1);
-                buffer = buffer.concat(newAdd);
             }
             //concats to the current buffer
-            else{
-                buffer = buffer.concat(newAdd);
-            }
+            buffer = buffer.concat(newAdd);
 
         }
         //if current input is decimal
@@ -195,20 +240,93 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-}
+    public void delete(){
+        int i;
+        if (buffer.endsWith(".")) {
+            decBef = false;
+        }
+        else if(isOperator(buffer.charAt(buffer.length()-1)) > 0){
+            operator = false;
+        }
+        //to do:
+        /*debug
+         * >decbef = true> operator add >decBef = False> delete op> decBef is still false
+         * */ {
+            if(buffer.length() <= 1){
+                buffer = "0";
+            }else {
+                buffer = buffer.substring(0, buffer.length() - 1);
+            }
+        }
+    }
+    //does not follow BODMAS calculates what comes first.
+    public double evaluate(){
 
-/*
-* to do
-* buffer evaluate = ?
-*
-* evaluate:
-* travel left to right, can use stack
-* stack[] = {}
-* for element in buffer{
-*   if element.isdigit()
-*
-* should i add '(' ')' ??
-*/
+        char[] expression = new char[buffer.length()];
+        double lnum = 0, rnum;
+        int i,curOP, prevOP= 1,indx= 0;
+        for(i =0; i<buffer.length();i++){
+            curOP = isOperator(buffer.charAt(i));
+            if( curOP != 0 ){
+                rnum = Double.parseDouble(buffer.substring(indx,i));
+                lnum = calculate(lnum, rnum, prevOP);
+                prevOP = curOP;
+                indx = i+1;
+            }
+            else if((i == buffer.length()-1)){
+                rnum = Double.parseDouble(buffer.substring(indx, i+1));
+                lnum = calculate(lnum, rnum, prevOP);
+                break;
+            }
+
+        }
+        return lnum;
+
+
+    }
+
+    public int isOperator(char ch){
+        switch (ch) {
+            case '+':
+                return 1;
+            case '-':
+                return 2;
+            case '/':
+                return 3;
+            case '*':
+                return 4;
+            case '%':
+                return 5;
+            default:
+                return 0;
+        }
+    }
+
+    public double calculate(double no1,double no2,int op){
+        switch (op){
+            case 1:{
+                return no1+no2;
+            }
+            case 2:{
+                return no1 - no2;
+            }
+            case 3:{
+                return no1/no2;
+            }
+            case 4:{
+                return no1*no2;
+            }
+            case 5:{
+                return (no1/100)*no2;
+            }
+            default:{
+                return -1;
+            }
+        }
+    }
+
+
+}
 
 
 
