@@ -197,8 +197,14 @@ public class MainActivity extends AppCompatActivity {
 
         //checks if the current input is an operator
         boolean operatorCur = (newAdd.equals("+") || newAdd.equals("-") || newAdd.equals("/") || newAdd.equals("*") || newAdd.equals("%"));
+        if(buffer.equals("Limit exceeded") || buffer.equals("Infinity")){
+            buffer = newAdd;
+        }
         if(newAdd.equals("=")){
             buffer = ""+evaluate();
+        }
+        else if(buffer.length() == 30){
+            buffer = "Limit exceeded";
         }
         //if the input is an operator
         else if(operatorCur){
@@ -242,6 +248,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void delete(){
         int i;
+
         if (buffer.endsWith(".")) {
             decBef = false;
         }
@@ -251,13 +258,16 @@ public class MainActivity extends AppCompatActivity {
         //to do:
         /*debug
          * >decbef = true> operator add >decBef = False> delete op> decBef is still false
-         * */ {
-            if(buffer.length() <= 1){
-                buffer = "0";
-            }else {
-                buffer = buffer.substring(0, buffer.length() - 1);
-            }
+         * */
+        if(buffer.equals("Limit exceeded") || buffer.equals("Infinity")){
+            buffer = "0";
         }
+        else if(buffer.length() <= 1){
+            buffer = "0";
+        }else {
+            buffer = buffer.substring(0, buffer.length() - 1);
+        }
+
     }
     //does not follow BODMAS calculates what comes first.
     public double evaluate(){
@@ -311,6 +321,7 @@ public class MainActivity extends AppCompatActivity {
                 return no1 - no2;
             }
             case 3:{
+
                 return no1/no2;
             }
             case 4:{
